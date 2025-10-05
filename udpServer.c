@@ -3,42 +3,47 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
-
-// Using 0 for the protocol is more standard and portable
-int create_socket(){
-    int socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
-    return socket_fd;
-}
+#include <unistd.h>
 
 int main(){
-    const char* serverName = "127.0.0.1"; // Example IP
+     char buffer[1024];
+
+    int socket_fd = socket(AF_INET, SOCK_DGRAM, 17);
+    if (socket_fd == -1)
+    {
+        perror("Socket creation failed"); // also tells you why it failed
+        printf("Socket creation failed");
+        exit(1);
+    }
+
+    printf("Socket Created Successfully. The description is %d", socket_fd);
     int serverPort = 7; // Echo port
 
     struct sockaddr_in s; //sockaddr_in is predefined no need to redefine it 
+    struct sockaddr_in c;
 
     memset(&s, 0, sizeof(s));
     s.sin_family = AF_INET;
     s.sin_port = htons(serverPort);
-    inet_aton(serverName, &s.sin_addr);
+    s.sin_addr.s_addr = INADDR_ANY;
 
-    // It's crucial to check the return value of this function
-    // if (inet_aton(serverName, &s.sin_addr) == 0) {
-    //     fprintf(stderr, "Invalid address\n");
-    //     exit(1);
-    // }
- 
-    int socket_fd = create_socket();
-    if (socket_fd == -1)
-    {
-        perror("Socket creation failed");
-        exit(1);
+
+    bind(socket_fd, (struct sockaddr*)&s, sizeof(struct sockaddr_in));
+    // Declare a variable to hold the size of the client address structure
+    socklen_t client_addr_len = sizeof(c); // size of client addr
+    while (1)
+    {  
+        int canR = recvfrom(socket_fd, buffer, sizeof(buffer), 0, (struct sockaddr *)&c, &client_addr_len); // passing the memory address
+        if (canR > 0)
+        {
+            printf("Server is up and running!\n");
+            printf("%s", buffer);
+        } else {
+            perror("Unable to listen\n");
+            exit(1);
+        }   
+        sleep(5);
     }
-
-    printf("Socket Created Successfully. The descriptor is %d\n", socket_fd);
-
-    // sending data
-    char msg[] = "oi its up fellas";
-    sendto(socket_fd, msg, strlen(msg), 0, (struct sockaddr *)&s, sizeof(struct sockaddr_in));
-
+        
     return 0;
 }
