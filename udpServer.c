@@ -6,6 +6,8 @@
 #include <unistd.h>
 
 int main(){
+
+     int number;
      char buffer[1024];
 
     int socket_fd = socket(AF_INET, SOCK_DGRAM, 17);
@@ -31,19 +33,24 @@ int main(){
     bind(socket_fd, (struct sockaddr*)&s, sizeof(struct sockaddr_in));
     // Declare a variable to hold the size of the client address structure
     socklen_t client_addr_len = sizeof(c); // size of client addr
+        // if (canR > 0)
+        // {
+        //     printf("Server is up and running!\n");
+        //     printf("%s", buffer);
+        // } else {
+        //     perror("Unable to listen\n");
+        //     exit(1);
+        // }  
     while (1)
     {  
-        int canR = recvfrom(socket_fd, buffer, sizeof(buffer), 0, (struct sockaddr *)&c, &client_addr_len); // passing the memory address
-        if (canR > 0)
-        {
-            printf("Server is up and running!\n");
-            printf("%s", buffer);
-        } else {
-            perror("Unable to listen\n");
-            exit(1);
-        }   
-        sleep(5);
-    }
+     int canR = recvfrom(socket_fd, buffer, sizeof(buffer), 0, (struct sockaddr *)&c, &client_addr_len); // passing the memory address
+     number = atoi(buffer);
+     printf("number received : %d\n", number);
+     sprintf(buffer, "%d\n", number*2);
+     sendto(socket_fd, buffer, strlen(buffer), 0, (struct sockaddr *)&c, sizeof(struct sockaddr_in));
+
+     sleep(5);
+          }
         
     return 0;
 }
